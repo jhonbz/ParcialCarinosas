@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sist. Central de Investigaciones</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #e9ecef; }
+        .card { box-shadow: 0 4px 8px rgba(0,0,0,0.05); border: none; border-radius: 10px; }
+        .navbar { background-color: #2c3e50; }
+        #app-screen { display: none; }
+        .admin-only { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="login-screen" class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card p-4 text-center border-top border-dark border-4">
+                <h3 class="mb-4">👮‍♂️️ Acceso Policial</h3>
+                <input type="text" id="username" class="form-control mb-3" placeholder="Usuario (ej: Inspector,admin)">
+                <input type="password" id="password" class="form-control mb-3" placeholder="Contraseña(ej: 1234,1111)">
+                <button class="btn btn-dark w-100" onclick="iniciarSesion()">Ingresar al Sistema</button>
+                <div id="login-error" class="text-danger mt-3 d-none">Credenciales inválidas.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="app-screen">
+    <nav class="navbar navbar-dark mb-4 p-3 shadow-sm">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h2">🕵️‍♀️ Central de Investigaciones</span>
+            <div>
+                <span id="user-badge" class="badge bg-light text-dark me-3"></span>
+                <span id="role-badge" class="badge bg-warning text-dark me-3"></span>
+                <button class="btn btn-danger btn-sm" onclick="cerrarSesion()">Salir</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="app-message" class="container-fluid px-4 mb-3"></div>
+
+    <div class="container-fluid px-4">
+        <div class="row mb-4">
+
+            <div class="col-md-4 mb-3 admin-only">
+                <div class="card p-3 border-start border-success border-4 h-100">
+                    <h6 class="text-success fw-bold">➕ Nuevo Caso</h6>
+                    <input type="text" id="new-case-title" class="form-control form-control-sm mb-2" placeholder="Título del caso">
+
+                    <select id="new-case-status" class="form-select form-select-sm mb-2">
+                        <option value="EN INVESTIGACIÓN">Estado: EN INVESTIGACIÓN</option>
+                        <option value="ABIERTO">Estado: ABIERTO</option>
+                        <option value="ARCHIVADO">Estado: ARCHIVADO</option>
+                    </select>
+
+                    <select id="new-case-priority" class="form-select form-select-sm mb-2">
+                        <option value="ALTA">Prioridad: ALTA</option>
+                        <option value="MEDIA">Prioridad: MEDIA</option>
+                        <option value="BAJA">Prioridad: BAJA</option>
+                    </select>
+
+                    <input type="text" id="new-case-assigned" class="form-control form-control-sm mb-2" placeholder="Asignado a (ej: Oficial Ramírez)">
+
+                    <button class="btn btn-success btn-sm w-100 mt-auto" onclick="crearCaso()">Registrar Expediente</button>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3 admin-only">
+                <div class="card p-3 border-start border-warning border-4 h-100">
+                    <h6 class="text-warning text-dark fw-bold">📋 Asignar Tarea</h6>
+                    <input type="text" id="new-task-desc" class="form-control form-control-sm mb-2" placeholder="Misión">
+                    <select id="new-task-role" class="form-select form-select-sm mb-2">
+                        <option value="DETECTIVE">Para: DETECTIVE</option>
+                        <option value="ADMIN">Para: ADMIN</option>
+                    </select>
+                    <input type="number" id="new-task-caseId" class="form-control form-control-sm mb-2" placeholder="ID del Caso Asociado">
+                    <button class="btn btn-warning btn-sm w-100 mt-auto" onclick="crearTarea()">Asignar Misión</button>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card p-3 border-start border-info border-4 h-100">
+                    <h6 class="text-info text-dark fw-bold">🔍 Registrar Evidencia Física</h6>
+                    <input type="text" id="new-evi-desc" class="form-control form-control-sm mb-2" placeholder="Descripción de la pista">
+                    <input type="number" id="new-evi-caseId" class="form-control form-control-sm mb-2" placeholder="ID del Caso Asociado">
+                    <button class="btn btn-info btn-sm text-white w-100 mt-auto" onclick="crearEvidencia()">Guardar en Bodega</button>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card p-3 border-start border-primary border-4 h-100">
+                    <h6 class="text-primary fw-bold">👤 Registrar Persona</h6>
+                    <input type="text" id="new-person-name" class="form-control form-control-sm mb-2" placeholder="Nombre completo">
+                    <input type="text" id="new-person-dni" class="form-control form-control-sm mb-2" placeholder="DNI/Cédula">
+                    <input type="number" id="new-person-age" class="form-control form-control-sm mb-2" placeholder="Edad">
+                    <input type="text" id="new-person-address" class="form-control form-control-sm mb-2" placeholder="Dirección">
+                    <input type="text" id="new-person-alias" class="form-control form-control-sm mb-2" placeholder="Alias (opcional)">
+                    <select id="new-person-role" class="form-select form-select-sm mb-2">
+                        <option value="SOSPECHOSO">Sospechoso</option>
+                        <option value="VICTIMA">Víctima</option>
+                        <option value="TESTIGO">Testigo</option>
+                        <option value="INFORMANTE">Informante</option>
+                    </select>
+                    <input type="number" id="new-person-caseId" class="form-control form-control-sm mb-2" placeholder="ID del Caso Asociado">
+                    <textarea id="new-person-statement" class="form-control form-control-sm mb-2" placeholder="Declaración o coartada" rows="2"></textarea>
+                    <input type="text" id="new-person-contact" class="form-control form-control-sm mb-2" placeholder="Información de contacto">
+                    <button class="btn btn-primary btn-sm w-100 mt-auto" onclick="crearPersona()">Registrar Persona</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="card p-3 shadow-sm">
+                    <h5 class="text-success">📁 Expedientes</h5><hr>
+                    <ul id="cases-list" class="list-group"></ul>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card p-3 shadow-sm">
+                    <h5 class="text-warning text-dark">📋 Tareas Activas</h5><hr>
+                    <ul id="tasks-list" class="list-group"></ul>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card p-3 shadow-sm bg-light">
+                    <h5 class="text-info text-dark">🔍 Visor de Pistas</h5><hr>
+                    <ul id="evidences-list" class="list-group">
+                        <li class="list-group-item text-muted">Selecciona un caso para ver sus pistas</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="card p-3 shadow-sm bg-light">
+                    <h5 class="text-primary">👤 Personas Involucradas</h5><hr>
+                    <ul id="people-list" class="list-group">
+                        <li class="list-group-item text-muted">Selecciona un caso para ver sus personas</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const KEYCLOAK_URL = 'http://127.0.0.1:8084/realms/carinosas-realm/protocol/openid-connect/token';
+    const GATEWAY_URL = 'http://localhost:8080';
+    let esAdmin = false;
+
+    async function iniciarSesion() {
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+        const params = new URLSearchParams({ client_id: 'api-gateway', username: user, password: pass, grant_type: 'password' });
+
+        try {
+            const response = await fetch(KEYCLOAK_URL, { method: 'POST', body: params });
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem('policia_token', data.access_token);
+                document.getElementById('user-badge').innerText = "Oficial: " + user.toUpperCase();
+                configurarInterfazPorRoles(data.access_token);
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('app-screen').style.display = 'block';
+                cargarDatos();
+            } else {
+                document.getElementById('login-error').classList.remove('d-none');
+            }
+        } catch (error) { console.error("Error al iniciar sesión", error); }
+    }
+
+    function configurarInterfazPorRoles(token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const roles = payload.realm_access.roles || [];
+        esAdmin = roles.includes('ADMIN');
+        document.getElementById('role-badge').innerText = esAdmin ? "RANGO: ADMIN" : "RANGO: DETECTIVE";
+        if(esAdmin) document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'block');
+    }
+
+    function cerrarSesion() {
+        localStorage.removeItem('policia_token');
+        window.location.reload();
+    }
+
+    function getHeaders() {
+        return { 'Authorization': `Bearer ${localStorage.getItem('policia_token')}`, 'Content-Type': 'application/json' };
+    }
+
+    function showMessage(text, type = 'danger') {
+        document.getElementById('app-message').innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${text}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+    }
+
+    function clearMessage() {
+        document.getElementById('app-message').innerHTML = '';
+    }
+
+    async function getErrorText(res) {
+        try {
+            const json = await res.json();
+            return json.message || json.error || JSON.stringify(json);
+        } catch (e) {
+            return await res.text();
+        }
+    }
+
+    async function cargarDatos() {
+        // 1. CARGAR CASOS
+        try {
+            const resCases = await fetch(`${GATEWAY_URL}/cases`, { headers: getHeaders() });
+
+            if (resCases.status === 401) { cerrarSesion(); return; }
+
+            let cases = await resCases.json();
+
+            // 🚨 1. IMPRIMIR LO QUE LLEGÓ PARA VER EL MISTERIO:
+            console.log("Respuesta del backend para casos:", cases);
+
+            // 🚨 2. VALIDAR SI ES UNA RESPUESTA DE ERROR (ej. 403 o 500)
+            if (!resCases.ok) {
+                console.error("El backend devolvió un error:", cases.error || cases.message);
+                document.getElementById('cases-list').innerHTML = `<li class="list-group-item text-danger">Error del servidor: ${cases.status} - ${cases.error || 'Desconocido'}</li>`;
+                return;
+            }
+
+            // 🚨 3. VALIDAR SI VIENE PAGINADO (Spring Boot Page<Case>)
+            if (!Array.isArray(cases) && cases.content) {
+                cases = cases.content; // Extraemos el arreglo real de adentro
+            }
+
+            // Ahora sí, hacemos el map con seguridad
+            document.getElementById('cases-list').innerHTML = cases.map(c => {
+                const botonBorrar = esAdmin ? `<button class="btn btn-outline-danger btn-sm ms-1" title="Borrar caso" onclick="eliminarCaso(${c.id})">🗑️</button>` : '';
+                return `
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div><strong>Caso #${c.id}</strong>: ${c.title} <br><span class="badge bg-secondary">${c.status}</span></div>
+                        <div>
+                            <button class="btn btn-info btn-sm text-white" onclick="verDetallesCaso(${c.id}, '${c.title}')">🔍 Ver Detalles</button>
+                            ${botonBorrar}
+                        </div>
+                    </div>
+                </li>`;
+            }).join('') || '<li class="list-group-item">Sin casos activos</li>';
+        } catch (e) {
+            console.error("Error cargando casos", e);
+            showMessage('Error al cargar los casos. Revisa la conexión con el gateway.', 'danger');
+        }
+
+        // 2. CARGAR TAREAS
+        try {
+            const resTasks = await fetch(`${GATEWAY_URL}/tasks`, { headers: getHeaders() });
+            if (resTasks.ok) {
+                const tasks = await resTasks.json();
+                document.getElementById('tasks-list').innerHTML = tasks.map(t => `
+                        <li class="list-group-item"><strong>[Para: ${t.assignedRole}]</strong> ${t.description} <br><small class="text-muted">Caso #${t.caseId}</small></li>
+                    `).join('') || '<li class="list-group-item">Sin tareas pendientes</li>';
+            } else {
+                showMessage(await getErrorText(resTasks), 'danger');
+            }
+        } catch (e) {
+            console.error("Error cargando tareas", e);
+            showMessage('Error al cargar las tareas. Revisa la conexión con el gateway.', 'danger');
+        }
+
+        // Limpiamos el visor de pistas
+        document.getElementById('evidences-list').innerHTML = '<li class="list-group-item text-muted">Selecciona un caso para ver sus pistas</li>';
+        // Limpiamos el visor de personas
+        document.getElementById('people-list').innerHTML = '<li class="list-group-item text-muted">Selecciona un caso para ver sus personas</li>';
+    }
+
+    async function verDetallesCaso(caseId, caseTitle) {
+        verEvidencias(caseId, caseTitle);
+        verPersonas(caseId, caseTitle);
+    }
+
+    async function verEvidencias(caseId, caseTitle) {
+        document.getElementById('evidences-list').innerHTML = '<li class="list-group-item text-muted">Buscando en la bodega...</li>';
+        try {
+            const res = await fetch(`${GATEWAY_URL}/evidences/case/${caseId}`, { headers: getHeaders() });
+            if(res.ok) {
+                const evidencias = await res.json();
+                document.getElementById('evidences-list').innerHTML = evidencias.map(e => `
+                        <li class="list-group-item border-start border-info border-4">
+                            <strong>Pista #${e.id}:</strong> ${e.name || e.description}
+                            <br><small class="text-muted">Expediente: ${caseTitle}</small>
+                        </li>
+                    `).join('') || `<li class="list-group-item text-warning">No hay pistas registradas para el Caso #${caseId}</li>`;
+            }
+        } catch (e) { console.error("Error conectando a evidencias", e); }
+    }
+
+    async function verPersonas(caseId, caseTitle) {
+        document.getElementById('people-list').innerHTML = '<li class="list-group-item text-muted">Buscando en los registros...</li>';
+        try {
+            const res = await fetch(`${GATEWAY_URL}/cases/${caseId}/people`, { headers: getHeaders() });
+            if(res.ok) {
+                const personas = await res.json();
+                document.getElementById('people-list').innerHTML = personas.map(p => `
+                        <li class="list-group-item border-start border-primary border-4">
+                            <strong>${p.name}</strong> (${p.role}) - DNI: ${p.dni || 'N/A'}
+                            <br><small class="text-muted">Edad: ${p.age || 'N/A'} | Dirección: ${p.address || 'N/A'}</small>
+                            ${p.alias ? `<br><small class="text-muted">Alias: ${p.alias}</small>` : ''}
+                            ${p.statementOrAlibi ? `<br><small class="text-muted">Declaración: ${p.statementOrAlibi}</small>` : ''}
+                        </li>
+                    `).join('') || `<li class="list-group-item text-warning">No hay personas registradas para el Caso #${caseId}</li>`;
+            }
+        } catch (e) { console.error("Error conectando a personas", e); }
+    }
+
+    async function crearCaso() {
+        clearMessage();
+        const body = { 
+            title: document.getElementById('new-case-title').value, 
+            status: document.getElementById('new-case-status').value,
+            priority: document.getElementById('new-case-priority').value,
+            assignedTo: document.getElementById('new-case-assigned').value
+        };
+        const res = await fetch(`${GATEWAY_URL}/cases`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
+        if (res.ok) {
+            showMessage('Caso registrado correctamente.', 'success');
+            document.getElementById('new-case-title').value = '';
+            document.getElementById('new-case-status').value = '';
+            document.getElementById('new-case-priority').value = '';
+            document.getElementById('new-case-assigned').value = '';
+            cargarDatos();
+        } else {
+            showMessage(await getErrorText(res), 'danger');
+        }
+    }
+
+    async function crearTarea() {
+        clearMessage();
+        const body = {
+            description: document.getElementById('new-task-desc').value,
+            assignedRole: document.getElementById('new-task-role').value,
+            caseId: Number(document.getElementById('new-task-caseId').value)
+        };
+        const res = await fetch(`${GATEWAY_URL}/tasks`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
+        if (res.ok) {
+            showMessage('Tarea asignada correctamente.', 'success');
+            document.getElementById('new-task-desc').value = '';
+            document.getElementById('new-task-caseId').value = '';
+            cargarDatos();
+        } else {
+            const errorText = await res.text();
+            if (res.status === 400) {
+                showMessage("no existe el caso para asignar tarea", 'danger');
+            } else if (res.status === 502) {
+                showMessage("Error de conexión con el servicio de casos. Verifica que el servicio esté ejecutándose.", 'danger');
+            } else {
+                showMessage("Error interno: " + errorText, 'danger');
+            }
+        }
+    }
+
+    async function crearEvidencia() {
+        clearMessage();
+        const caseId = Number(document.getElementById('new-evi-caseId').value);
+        const desc = document.getElementById('new-evi-desc').value;
+        const body = { name: desc, description: desc, caseId };
+        const res = await fetch(`${GATEWAY_URL}/evidences`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
+        if (res.ok) {
+            showMessage('Evidencia registrada correctamente.', 'success');
+            document.getElementById('new-evi-desc').value = '';
+            document.getElementById('new-evi-caseId').value = '';
+            verDetallesCaso(caseId, 'Recién actualizada');
+        } else {
+            const errorText = await res.text();
+            if (res.status === 400) {
+                showMessage("no existe el caso para registrar evidencia", 'danger');
+            } else if (res.status === 502) {
+                showMessage("Error de conexión con el servicio de casos. Verifica que el servicio esté ejecutándose.", 'danger');
+            } else {
+                showMessage("Error interno: " + errorText, 'danger');
+            }
+        }
+    }
+
+    async function crearPersona() {
+        clearMessage();
+        const caseId = Number(document.getElementById('new-person-caseId').value);
+        const body = {
+            name: document.getElementById('new-person-name').value,
+            dni: document.getElementById('new-person-dni').value,
+            age: Number(document.getElementById('new-person-age').value) || null,
+            address: document.getElementById('new-person-address').value,
+            alias: document.getElementById('new-person-alias').value,
+            role: document.getElementById('new-person-role').value,
+            caseId: caseId,
+            statementOrAlibi: document.getElementById('new-person-statement').value,
+            contactInfo: document.getElementById('new-person-contact').value
+        };
+        const res = await fetch(`${GATEWAY_URL}/people`, { method: 'POST', headers: getHeaders(), body: JSON.stringify(body) });
+        if (res.ok) {
+            showMessage('Persona registrada correctamente.', 'success');
+            // Limpiar campos
+            document.getElementById('new-person-name').value = '';
+            document.getElementById('new-person-dni').value = '';
+            document.getElementById('new-person-age').value = '';
+            document.getElementById('new-person-address').value = '';
+            document.getElementById('new-person-alias').value = '';
+            document.getElementById('new-person-caseId').value = '';
+            document.getElementById('new-person-statement').value = '';
+            document.getElementById('new-person-contact').value = '';
+            verDetallesCaso(caseId, 'Recién actualizada');
+        } else {
+            const errorText = await res.text();
+            if (res.status === 400) {
+                showMessage("no existe el caso para registrar persona", 'danger');
+            } else if (res.status === 502) {
+                showMessage("Error de conexión con el servicio de casos. Verifica que el servicio esté ejecutándose.", 'danger');
+            } else {
+                showMessage("Error interno: " + errorText, 'danger');
+            }
+        }
+    }
+
+    async function eliminarCaso(id) {
+        if(!confirm("¿Seguro que quieres borrar este caso? Esta acción es irreversible.")) return;
+        await fetch(`${GATEWAY_URL}/cases/${id}`, { method: 'DELETE', headers: getHeaders() });
+        cargarDatos();
+    }
+</script>
+</body>
+</html>

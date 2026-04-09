@@ -1,0 +1,123 @@
+version: '3.8'
+
+# Definimos la red:
+networks:
+  policia-net:
+    driver: bridge
+
+volumes:
+  keycloak_data:
+
+services:
+  # ==========================================
+  # 1. INFRAESTRUCTURA ( herramientas base)
+  # ==========================================
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"   # Puerto de comunicación interna
+      - "15672:15672" # Puerto del panel web
+    networks:
+      - policia-net
+
+  # Keycloak (Asumo que lo levantas en modo DEV, ajusta si es diferente)
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.0
+    command: start-dev
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    ports:
+      - "8084:8080" # Tu puerto 8084 mapeado al 8080 de Keycloak
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    networks:
+      - policia-net
+
+  # ==========================================
+  # 2. MICROSERVICIOS
+  # ==========================================
+
+  api-gateway:
+    build: 
+      context: ./api-gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - policia-net
+    environment:
+      # 1. El nombre que el Gateway aceptará (lo que ve tu navegador)
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/carinosas-realm
+      # 2. La ruta interna donde el Gateway buscará las llaves para validar ese token
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/carinosas-realm/protocol/openid-connect/certs
+    depends_on:
+      - keycloak
+
+  case-service:
+    build: 
+      context: ./case-service
+    ports:
+      - "8081:8081"
+    networks:
+      - policia-net
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./db-data/cases:/data
+
+  people-service:
+    build: 
+      context: ./people-service
+    ports:
+      - "8083:8083"
+    networks:
+      - policia-net
+    environment:
+      - CASE_SERVICE_URL=http://case-service:8081
+    depends_on:
+      - case-service
+    volumes:
+      - ./db-data/people:/data
+
+  evidence-service:
+    build: 
+      context: ./evidence-service
+    ports:
+      - "8082:8082"
+    networks:
+      - policia-net
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./db-data/evidences:/data
+
+  workflow-service:
+    build: 
+      context: ./workflow-service
+    ports:
+      - "8085:8085"
+    networks:
+      - policia-net
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./db-data/workflow:/data
+
+  # ==========================================
+  # 3. INTERFAZ GRÁFICA (Frontend)
+  # ==========================================
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "5500:80"
+    volumes:
+      - ./Frontend:/usr/share/nginx/html
+    networks:
+      - policia-net
