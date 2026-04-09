@@ -7,3 +7,6 @@ db-data/
 .idea/
 .vscode/
 *.class
+target/
+.DS_Store
+db-data/

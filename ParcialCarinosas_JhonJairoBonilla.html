@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentación — ParcialCarinosas</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f3;
+    --bg3: #ececea;
+    --text: #1a1a18;
+    --text2: #5a5a56;
+    --text3: #9a9a94;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --radius: 8px;
+    --radius-lg: 12px;
+    --mono: 'Courier New', Courier, monospace;
+    --sans: system-ui, -apple-system, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #262624;
+      --bg3: #303030;
+      --text: #e8e6de;
+      --text2: #a8a6a0;
+      --text3: #686660;
+      --border: rgba(255,255,255,0.10);
+      --border2: rgba(255,255,255,0.20);
+    }
+    .get  { background:#0c2e4a !important; color:#7bbdf0 !important; }
+    .post { background:#152a0d !important; color:#82c85a !important; }
+    .put  { background:#2e1e06 !important; color:#e8a84a !important; }
+    .del  { background:#2e0d0d !important; color:#f08080 !important; }
+    .route{ background:#1a1040 !important; color:#a090e8 !important; }
+    .state-open   { background:#152a0d !important; color:#82c85a !important; }
+    .state-proc   { background:#2e1e06 !important; color:#e8a84a !important; }
+    .state-rev    { background:#0c2e4a !important; color:#7bbdf0 !important; }
+    .state-closed { background:#2e0d0d !important; color:#f08080 !important; }
+    pre { background:#0e0e0c !important; border-color: rgba(255,255,255,0.08) !important; }
+    code { background:#262624 !important; }
+  }
+
+  body {
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text);
+    background: var(--bg);
+    padding: 32px 24px;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ── */
+  .header { margin-bottom: 32px; padding-bottom: 20px; border-bottom: 0.5px solid var(--border); }
+  .header h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .header p  { font-size: 13px; color: var(--text2); }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 12px; border: 0.5px solid var(--border);
+    background: var(--bg2); color: var(--text2);
+  }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .tab {
+    padding: 6px 14px; border: 0.5px solid var(--border2);
+    border-radius: var(--radius); font-size: 13px; cursor: pointer;
+    background: var(--bg2); color: var(--text2); transition: all .15s;
+    user-select: none;
+  }
+  .tab:hover { background: var(--bg3); }
+  .tab.active {
+    background: var(--bg); color: var(--text);
+    border-color: var(--text3); font-weight: 500;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Section badge ── */
+  .section-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 4px;
+    font-size: 11px; margin-bottom: 12px;
+    background: #e6f1fb; color: #0c447c;
+  }
+
+  /* ── Headings ── */
+  h2 { font-size: 18px; font-weight: 500; margin: 24px 0 8px; }
+  h3 { font-size: 15px; font-weight: 500; margin: 18px 0 8px; color: var(--text); }
+  h4 { font-size: 13px; font-weight: 500; margin: 12px 0 4px; color: var(--text2); }
+  p  { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 8px; }
+
+  /* ── Method badges ── */
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600; margin-right: 6px;
+    letter-spacing: .3px; flex-shrink: 0;
+  }
+  .get   { background: #e6f1fb; color: #0c447c; }
+  .post  { background: #eaf3de; color: #27500a; }
+  .put   { background: #faeeda; color: #633806; }
+  .del   { background: #fcebeb; color: #791f1f; }
+  .route { background: #eeedfe; color: #3c3489; }
+
+  /* ── Endpoints ── */
+  .ep {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 11px 0; border-bottom: 0.5px solid var(--border);
+  }
+  .ep:last-child { border-bottom: none; }
+  .ep-path  { font-family: var(--mono); font-size: 13px; color: var(--text); margin-bottom: 3px; }
+  .ep-desc  { font-size: 12px; color: var(--text2); }
+  .ep-params{ font-size: 11px; color: var(--text3); margin-top: 3px; font-family: var(--mono); }
+
+  /* ── Model card ── */
+  .model-card {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 10px 14px; margin-bottom: 10px;
+  }
+  .model-field {
+    display: flex; justify-content: space-between;
+    padding: 4px 0; border-bottom: 0.5px solid var(--border);
+    font-size: 12px;
+  }
+  .model-field:last-child { border-bottom: none; }
+  .field-name { font-family: var(--mono); color: var(--text); }
+  .field-type { color: var(--text2); }
+  .field-req  { color: #a32d2d; font-size: 11px; }
+
+  /* ── States ── */
+  .states { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
+  .state-open   { background: #eaf3de; color: #27500a; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .state-proc   { background: #faeeda; color: #633806; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .state-rev    { background: #e6f1fb; color: #0c447c; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .state-closed { background: #fcebeb; color: #791f1f; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .state-arrow  { font-size: 12px; color: var(--text3); }
+
+  /* ── Code / pre ── */
+  pre {
+    background: #f8f8f6; border: 0.5px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px;
+    font-family: var(--mono); font-size: 12px; color: var(--text2);
+    line-height: 1.8; overflow-x: auto; margin-bottom: 10px;
+  }
+  code {
+    font-family: var(--mono); font-size: 12px;
+    background: var(--bg2); padding: 1px 5px; border-radius: 4px;
+    color: var(--text);
+  }
+
+  /* ── Architecture diagram ── */
+  .arch-wrap { margin: 16px 0; overflow-x: auto; }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 40px; padding-top: 16px;
+    border-top: 0.5px solid var(--border);
+    font-size: 12px; color: var(--text3); text-align: center;
+  }
+
+  @media print {
+    .tabs, .tab { display: none !important; }
+    .panel { display: block !important; page-break-inside: avoid; }
+    h2 { page-break-before: always; }
+    h2:first-child { page-break-before: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 Documentación técnica — ParcialCarinosas</h1>
+  <p>Sistema de gestión de casos sociales · Arquitectura de microservicios con Java + Spring Boot</p>
+  <div class="pills">
+    <span class="pill">☕ Java · Spring Boot</span>
+    <span class="pill">🔀 Spring Cloud Gateway</span>
+    <span class="pill">🐳 Docker Compose</span>
+    <span class="pill">🌐 HTML Frontend</span>
+    <span class="pill">🗄️ BD por servicio</span>
+  </div>
+</div>
+
+<!-- ─── ARQUITECTURA SVG ─── -->
+<h2>Arquitectura general</h2>
+<div class="arch-wrap">
+<svg width="100%" viewBox="0 0 680 480" style="max-width:680px;display:block;margin:0 auto">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#888" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <!-- Frontend -->
+  <rect x="240" y="16" width="200" height="52" rx="8" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.5"/>
+  <text x="340" y="37" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="500" fill="#085041">Frontend</text>
+  <text x="340" y="57" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="#0f6e56">HTML · cliente web</text>
+
+  <!-- Arrow -->
+  <line x1="340" y1="68" x2="340" y2="104" stroke="#888" stroke-width="0.5" marker-end="url(#arr)"/>
+  <text x="350" y="90" font-family="system-ui,sans-serif" font-size="11" fill="#888">HTTP</text>
+
+  <!-- API Gateway -->
+  <rect x="190" y="104" width="300" height="52" rx="8" fill="#eeedfe" stroke="#534ab7" stroke-width="0.5"/>
+  <text x="340" y="125" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" font-weight="500" fill="#26215c">API Gateway</text>
+  <text x="340" y="145" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="#534ab7">Spring Cloud Gateway · :8080</text>
+
+  <!-- Lines to services -->
+  <path d="M235 156 L100 232" fill="none" stroke="#bbb" stroke-width="0.5" marker-end="url(#arr)"/>
+  <path d="M290 156 L233 232" fill="none" stroke="#bbb" stroke-width="0.5" marker-end="url(#arr)"/>
+  <path d="M390 156 L447 232" fill="none" stroke="#bbb" stroke-width="0.5" marker-end="url(#arr)"/>
+  <path d="M445 156 L577 232" fill="none" stroke="#bbb" stroke-width="0.5" marker-end="url(#arr)"/>
+
+  <!-- people-service -->
+  <rect x="28" y="232" width="148" height="56" rx="8" fill="#e6f1fb" stroke="#185fa5" stroke-width="0.5"/>
+  <text x="102" y="254" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="500" fill="#042c53">people-service</text>
+  <text x="102" y="273" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#185fa5">Personas · :8081</text>
+
+  <!-- case-service -->
+  <rect x="188" y="232" width="148" height="56" rx="8" fill="#e6f1fb" stroke="#185fa5" stroke-width="0.5"/>
+  <text x="262" y="254" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="500" fill="#042c53">case-service</text>
+  <text x="262" y="273" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#185fa5">Casos · :8082</text>
+
+  <!-- evidence-service -->
+  <rect x="348" y="232" width="160" height="56" rx="8" fill="#e6f1fb" stroke="#185fa5" stroke-width="0.5"/>
+  <text x="428" y="254" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="500" fill="#042c53">evidence-service</text>
+  <text x="428" y="273" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#185fa5">Evidencias · :8083</text>
+
+  <!-- workflow-service -->
+  <rect x="500" y="232" width="152" height="56" rx="8" fill="#e6f1fb" stroke="#185fa5" stroke-width="0.5"/>
+  <text x="576" y="254" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="500" fill="#042c53">workflow-service</text>
+  <text x="576" y="273" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#185fa5">Flujo · :8084</text>
+
+  <!-- DB arrows -->
+  <line x1="102" y1="288" x2="102" y2="352" stroke="#bbb" stroke-width="0.5" marker-end="url(#arr)"/>
+  <line x1="262" y1="288" x2="262" y2="352" stroke="#bbb" stroke-width="0.5" marker-end="url(#arr)"/>
+  <line x1="428" y1="288" x2="428" y2="352" stroke="#bbb" stroke-width="0.5" marker-end="url(#arr)"/>
+  <line x1="576" y1="288" x2="576" y2="352" stroke="#bbb" stroke-width="0.5" marker-end="url(#arr)"/>
+
+  <!-- DB boxes -->
+  <rect x="42" y="352" width="120" height="36" rx="6" fill="#f1efe8" stroke="#888780" stroke-width="0.5"/>
+  <text x="102" y="374" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#444441">DB personas</text>
+  <rect x="202" y="352" width="120" height="36" rx="6" fill="#f1efe8" stroke="#888780" stroke-width="0.5"/>
+  <text x="262" y="374" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#444441">DB casos</text>
+  <rect x="363" y="352" width="130" height="36" rx="6" fill="#f1efe8" stroke="#888780" stroke-width="0.5"/>
+  <text x="428" y="374" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#444441">DB evidencias</text>
+  <rect x="511" y="352" width="130" height="36" rx="6" fill="#f1efe8" stroke="#888780" stroke-width="0.5"/>
+  <text x="576" y="374" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#444441">DB workflow</text>
+
+  <!-- Docker border -->
+  <rect x="18" y="412" width="644" height="52" rx="10" fill="none" stroke="#bbb" stroke-width="0.5" stroke-dasharray="6 4"/>
+  <text x="340" y="442" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="#888">🐳 Docker Compose — orquesta todos los servicios en contenedores</text>
+</svg>
+</div>
+
+<!-- ─── TABS ─── -->
+<div class="tabs">
+  <div class="tab active" onclick="showTab('gateway')">API Gateway</div>
+  <div class="tab" onclick="showTab('people')">people-service</div>
+  <div class="tab" onclick="showTab('case')">case-service</div>
+  <div class="tab" onclick="showTab('evidence')">evidence-service</div>
+  <div class="tab" onclick="showTab('workflow')">workflow-service</div>
+  <div class="tab" onclick="showTab('docker')">Docker / Config</div>
+</div>
+
+<!-- ===== GATEWAY ===== -->
+<div id="tab-gateway" class="panel active">
+  <div class="section-badge">Puerto :8080 — punto de entrada único</div>
+  <h3>Descripción</h3>
+  <p>El API Gateway actúa como puerta de entrada única para todos los microservicios. Recibe las peticiones del frontend y las redirige al servicio correspondiente según la ruta. Implementado con <code>Spring Cloud Gateway</code>.</p>
+  <h3>Rutas de enrutamiento</h3>
+  <div class="ep"><span class="badge route">ROUTE</span><div><div class="ep-path">/api/people/**</div><div class="ep-desc">Redirige al <code>people-service</code> en puerto :8081</div></div></div>
+  <div class="ep"><span class="badge route">ROUTE</span><div><div class="ep-path">/api/cases/**</div><div class="ep-desc">Redirige al <code>case-service</code> en puerto :8082</div></div></div>
+  <div class="ep"><span class="badge route">ROUTE</span><div><div class="ep-path">/api/evidence/**</div><div class="ep-desc">Redirige al <code>evidence-service</code> en puerto :8083</div></div></div>
+  <div class="ep"><span class="badge route">ROUTE</span><div><div class="ep-path">/api/workflow/**</div><div class="ep-desc">Redirige al <code>workflow-service</code> en puerto :8084</div></div></div>
+  <h4>Headers de solicitud recomendados</h4>
+  <div class="model-card">
+    <div class="model-field"><span class="field-name">Content-Type</span><span class="field-type">application/json</span></div>
+    <div class="model-field"><span class="field-name">Accept</span><span class="field-type">application/json</span></div>
+  </div>
+</div>
+
+<!-- ===== PEOPLE ===== -->
+<div id="tab-people" class="panel">
+  <div class="section-badge">Puerto :8081 — gestión de personas</div>
+  <h3>Descripción</h3>
+  <p>Maneja el CRUD de personas (beneficiarios, empleados o involucrados) dentro del sistema Carinosas. Cada persona puede estar asociada a uno o varios casos.</p>
+  <h3>Endpoints</h3>
+  <div class="ep"><span class="badge get">GET</span><div><div class="ep-path">/api/people</div><div class="ep-desc">Lista todas las personas registradas en el sistema</div><div class="ep-params">→ 200 OK · Array de PersonaDTO</div></div></div>
+  <div class="ep"><span class="badge get">GET</span><div><div class="ep-path">/api/people/{id}</div><div class="ep-desc">Obtiene el detalle de una persona por su ID</div><div class="ep-params">@PathVariable id (Long) · → 200 OK | 404 Not Found</div></div></div>
+  <div class="ep"><span class="badge post">POST</span><div><div class="ep-path">/api/people</div><div class="ep-desc">Crea una nueva persona en el sistema</div><div class="ep-params">@RequestBody PersonaDTO · → 201 Created</div></div></div>
+  <div class="ep"><span class="badge put">PUT</span><div><div class="ep-path">/api/people/{id}</div><div class="ep-desc">Actualiza los datos de una persona existente</div><div class="ep-params">@PathVariable id · @RequestBody PersonaDTO · → 200 OK | 404</div></div></div>
+  <div class="ep"><span class="badge del">DELETE</span><div><div class="ep-path">/api/people/{id}</div><div class="ep-desc">Elimina una persona del sistema por su ID</div><div class="ep-params">@PathVariable id · → 204 No Content | 404</div></div></div>
+  <h3>Modelo de datos — Persona</h3>
+  <div class="model-card">
+    <div class="model-field"><span class="field-name">id</span><span class="field-type">Long</span></div>
+    <div class="model-field"><span class="field-name">nombre</span><span><span class="field-type">String</span> <span class="field-req">requerido</span></span></div>
+    <div class="model-field"><span class="field-name">apellido</span><span><span class="field-type">String</span> <span class="field-req">requerido</span></span></div>
+    <div class="model-field"><span class="field-name">documento</span><span><span class="field-type">String</span> <span class="field-req">requerido</span></span></div>
+    <div class="model-field"><span class="field-name">email</span><span class="field-type">String</span></div>
+    <div class="model-field"><span class="field-name">telefono</span><span class="field-type">String</span></div>
+    <div class="model-field"><span class="field-name">fechaRegistro</span><span class="field-type">LocalDate</span></div>
+  </div>
+</div>
+
+<!-- ===== CASE ===== -->
+<div id="tab-case" class="panel">
+  <div class="section-badge">Puerto :8082 — gestión de casos</div>
+  <h3>Descripción</h3>
+  <p>Núcleo del sistema. Gestiona los casos sociales o jurídicos de la organización Carinosas. Cada caso está asociado a una persona y tiene un estado que se controla desde el <code>workflow-service</code>.</p>
+  <h3>Endpoints</h3>
+  <div class="ep"><span class="badge get">GET</span><div><div class="ep-path">/api/cases</div><div class="ep-desc">Retorna todos los casos registrados</div><div class="ep-params">→ 200 OK · Array de CasoDTO</div></div></div>
+  <div class="ep"><span class="badge get">GET</span><div><div class="ep-path">/api/cases/{id}</div><div class="ep-desc">Obtiene un caso específico por su ID</div><div class="ep-params">@PathVariable id · → 200 OK | 404 Not Found</div></div></div>
+  <div class="ep"><span class="badge get">GET</span><div><div class="ep-path">/api/cases/person/{personId}</div><div class="ep-desc">Filtra todos los casos de una persona concreta</div><div class="ep-params">@PathVariable personId · → 200 OK · Array de CasoDTO</div></div></div>
+  <div class="ep"><span class="badge post">POST</span><div><div class="ep-path">/api/cases</div><div class="ep-desc">Abre un nuevo caso. Se crea con estado inicial ABIERTO</div><div class="ep-params">@RequestBody CasoDTO · → 201 Created</div></div></div>
+  <div class="ep"><span class="badge put">PUT</span><div><div class="ep-path">/api/cases/{id}</div><div class="ep-desc">Actualiza información del caso (descripción, fecha, etc.)</div><div class="ep-params">@PathVariable id · @RequestBody CasoDTO · → 200 OK</div></div></div>
+  <div class="ep"><span class="badge del">DELETE</span><div><div class="ep-path">/api/cases/{id}</div><div class="ep-desc">Elimina (o archiva) un caso del sistema</div><div class="ep-params">@PathVariable id · → 204 No Content</div></div></div>
+  <h3>Modelo de datos — Caso</h3>
+  <div class="model-card">
+    <div class="model-field"><span class="field-name">id</span><span class="field-type">Long</span></div>
+    <div class="model-field"><span class="field-name">titulo</span><span><span class="field-type">String</span> <span class="field-req">requerido</span></span></div>
+    <div class="model-field"><span class="field-name">descripcion</span><span class="field-type">String</span></div>
+    <div class="model-field"><span class="field-name">personaId</span><span><span class="field-type">Long (FK)</span> <span class="field-req">requerido</span></span></div>
+    <div class="model-field"><span class="field-name">estado</span><span class="field-type">String (ENUM)</span></div>
+    <div class="model-field"><span class="field-name">fechaApertura</span><span class="field-type">LocalDate</span></div>
+    <div class="model-field"><span class="field-name">fechaCierre</span><span class="field-type">LocalDate</span></div>
+  </div>
+</div>
+
+<!-- ===== EVIDENCE ===== -->
+<div id="tab-evidence" class="panel">
+  <div class="section-badge">Puerto :8083 — gestión de evidencias</div>
+  <h3>Descripción</h3>
+  <p>Administra los documentos, archivos y evidencias que soportan cada caso. Una evidencia siempre está ligada a un <code>caseId</code> específico.</p>
+  <h3>Endpoints</h3>
+  <div class="ep"><span class="badge get">GET</span><div><div class="ep-path">/api/evidence</div><div class="ep-desc">Lista todas las evidencias en el sistema</div><div class="ep-params">→ 200 OK · Array de EvidenciaDTO</div></div></div>
+  <div class="ep"><span class="badge get">GET</span><div><div class="ep-path">/api/evidence/{id}</div><div class="ep-desc">Obtiene una evidencia puntual por su ID</div><div class="ep-params">@PathVariable id · → 200 OK | 404</div></div></div>
+  <div class="ep"><span class="badge get">GET</span><div><div class="ep-path">/api/evidence/case/{caseId}</div><div class="ep-desc">Retorna todas las evidencias asociadas a un caso</div><div class="ep-params">@PathVariable caseId · → 200 OK · Array de EvidenciaDTO</div></div></div>
+  <div class="ep"><span class="badge post">POST</span><div><div class="ep-path">/api/evidence</div><div class="ep-desc">Agrega una nueva evidencia vinculada a un caso</div><div class="ep-params">@RequestBody EvidenciaDTO · → 201 Created</div></div></div>
+  <div class="ep"><span class="badge put">PUT</span><div><div class="ep-path">/api/evidence/{id}</div><div class="ep-desc">Actualiza los metadatos de una evidencia</div><div class="ep-params">@PathVariable id · @RequestBody EvidenciaDTO · → 200 OK</div></div></div>
+  <div class="ep"><span class="badge del">DELETE</span><div><div class="ep-path">/api/evidence/{id}</div><div class="ep-desc">Elimina una evidencia del caso</div><div class="ep-params">@PathVariable id · → 204 No Content</div></div></div>
+  <h3>Modelo de datos — Evidencia</h3>
+  <div class="model-card">
+    <div class="model-field"><span class="field-name">id</span><span class="field-type">Long</span></div>
+    <div class="model-field"><span class="field-name">nombre</span><span><span class="field-type">String</span> <span class="field-req">requerido</span></span></div>
+    <div class="model-field"><span class="field-name">tipo</span><span class="field-type">String (documento, foto, video…)</span></div>
+    <div class="model-field"><span class="field-name">url</span><span class="field-type">String</span></div>
+    <div class="model-field"><span class="field-name">caseId</span><span><span class="field-type">Long (FK)</span> <span class="field-req">requerido</span></span></div>
+    <div class="model-field"><span class="field-name">fechaCarga</span><span class="field-type">LocalDateTime</span></div>
+    <div class="model-field"><span class="field-name">descripcion</span><span class="field-type">String</span></div>
+  </div>
+</div>
+
+<!-- ===== WORKFLOW ===== -->
+<div id="tab-workflow" class="panel">
+  <div class="section-badge">Puerto :8084 — estados y transiciones</div>
+  <h3>Descripción</h3>
+  <p>Controla el ciclo de vida de los casos a través de un motor de estados. Define qué transiciones son válidas y registra el historial de cambios de estado de cada caso.</p>
+  <h3>Estados del ciclo de vida</h3>
+  <div class="states">
+    <span class="state-open">ABIERTO</span>
+    <span class="state-arrow">→</span>
+    <span class="state-proc">EN PROCESO</span>
+    <span class="state-arrow">→</span>
+    <span class="state-rev">EN REVISIÓN</span>
+    <span class="state-arrow">→</span>
+    <span class="state-closed">CERRADO</span>
+  </div>
+  <h3>Endpoints</h3>
+  <div class="ep"><span class="badge get">GET</span><div><div class="ep-path">/api/workflow</div><div class="ep-desc">Lista todos los registros de workflow / historial de estados</div><div class="ep-params">→ 200 OK · Array de WorkflowDTO</div></div></div>
+  <div class="ep"><span class="badge get">GET</span><div><div class="ep-path">/api/workflow/{id}</div><div class="ep-desc">Obtiene un registro de transición específico</div><div class="ep-params">@PathVariable id · → 200 OK | 404</div></div></div>
+  <div class="ep"><span class="badge get">GET</span><div><div class="ep-path">/api/workflow/case/{caseId}</div><div class="ep-desc">Devuelve el historial completo de estados de un caso</div><div class="ep-params">@PathVariable caseId · → 200 OK · Array de WorkflowDTO</div></div></div>
+  <div class="ep"><span class="badge post">POST</span><div><div class="ep-path">/api/workflow</div><div class="ep-desc">Registra una nueva transición de estado para un caso</div><div class="ep-params">@RequestBody WorkflowDTO · → 201 Created | 400 Transición inválida</div></div></div>
+  <div class="ep"><span class="badge put">PUT</span><div><div class="ep-path">/api/workflow/{id}</div><div class="ep-desc">Corrige o actualiza un registro de workflow (admin)</div><div class="ep-params">@PathVariable id · @RequestBody WorkflowDTO · → 200 OK</div></div></div>
+  <div class="ep"><span class="badge del">DELETE</span><div><div class="ep-path">/api/workflow/{id}</div><div class="ep-desc">Elimina un registro de transición del historial</div><div class="ep-params">@PathVariable id · → 204 No Content</div></div></div>
+  <h3>Modelo de datos — Workflow</h3>
+  <div class="model-card">
+    <div class="model-field"><span class="field-name">id</span><span class="field-type">Long</span></div>
+    <div class="model-field"><span class="field-name">caseId</span><span><span class="field-type">Long (FK)</span> <span class="field-req">requerido</span></span></div>
+    <div class="model-field"><span class="field-name">estadoAnterior</span><span class="field-type">String (ENUM)</span></div>
+    <div class="model-field"><span class="field-name">estadoNuevo</span><span><span class="field-type">String (ENUM)</span> <span class="field-req">requerido</span></span></div>
+    <div class="model-field"><span class="field-name">motivo</span><span class="field-type">String</span></div>
+    <div class="model-field"><span class="field-name">responsable</span><span class="field-type">String</span></div>
+    <div class="model-field"><span class="field-name">fechaCambio</span><span class="field-type">LocalDateTime</span></div>
+  </div>
+</div>
+
+<!-- ===== DOCKER ===== -->
+<div id="tab-docker" class="panel">
+  <div class="section-badge">Infraestructura y puertos</div>
+  <h3>Servicios en Docker Compose</h3>
+  <div class="model-card">
+    <div class="model-field"><span class="field-name">frontend</span><span class="field-type">Nginx / servidor estático HTML · :3000</span></div>
+    <div class="model-field"><span class="field-name">api-gateway</span><span class="field-type">Spring Cloud Gateway · :8080</span></div>
+    <div class="model-field"><span class="field-name">people-service</span><span class="field-type">Spring Boot REST · :8081</span></div>
+    <div class="model-field"><span class="field-name">case-service</span><span class="field-type">Spring Boot REST · :8082</span></div>
+    <div class="model-field"><span class="field-name">evidence-service</span><span class="field-type">Spring Boot REST · :8083</span></div>
+    <div class="model-field"><span class="field-name">workflow-service</span><span class="field-type">Spring Boot REST · :8084</span></div>
+  </div>
+  <h3>Estructura de directorios</h3>
+  <pre>ParcialCarinosas/
+├── Frontend/            ← cliente HTML/JS
+├── api-gateway/         ← Spring Cloud Gateway
+├── people-service/      ← microservicio personas
+├── case-service/        ← microservicio casos
+├── evidence-service/    ← microservicio evidencias
+├── workflow-service/    ← microservicio flujo
+├── docker-compose.yml   ← orquestación
+└── .gitignore</pre>
+  <h3>Levantar el proyecto</h3>
+  <pre># Desde la raíz del proyecto
+docker-compose up --build
+
+# Acceder al sistema
+Frontend:    http://localhost:3000
+API Gateway: http://localhost:8080</pre>
+  <h3>Ejemplo de llamada completa</h3>
+  <pre># 1. Crear una persona
+POST http://localhost:8080/api/people
+Content-Type: application/json
+
+{
+  "nombre": "María",
+  "apellido": "González",
+  "documento": "1234567890",
+  "email": "maria@example.com"
+}
+
+# 2. Abrir un caso para esa persona
+POST http://localhost:8080/api/cases
+{
+  "titulo": "Caso de asistencia",
+  "personaId": 1,
+  "estado": "ABIERTO"
+}
+
+# 3. Adjuntar evidencia al caso
+POST http://localhost:8080/api/evidence
+{
+  "nombre": "Formulario inicial",
+  "tipo": "documento",
+  "caseId": 1
+}
+
+# 4. Avanzar el workflow
+POST http://localhost:8080/api/workflow
+{
+  "caseId": 1,
+  "estadoAnterior": "ABIERTO",
+  "estadoNuevo": "EN PROCESO",
+  "motivo": "Revisión iniciada"
+}</pre>
+</div>
+
+<div class="footer">
+  ParcialCarinosas · Jhon Jairo Bonilla · github.com/jhonbz/ParcialCarinosas
+</div>
+
+<script>
+function showTab(id) {
+  const ids = ['gateway','people','case','evidence','workflow','docker'];
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ids[i] === id);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+}
+</script>
+</body>
+</html>

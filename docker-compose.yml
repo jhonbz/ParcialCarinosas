@@ -24,14 +24,20 @@ services:
   # Keycloak (Asumo que lo levantas en modo DEV, ajusta si es diferente)
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.0
-    command: start-dev
+    command: start-dev --import-realm
     environment:
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_HOSTNAME_URL=http://localhost:8084
+      - KEYCLOAK_IMPORT=/opt/keycloak/data/import/realm.json
+      - KC_DB=dev-mem
+      - KC_HOSTNAME_STRICT=false
+      - KC_HTTP_ENABLED=true
+      - KC_HEALTH_ENABLED=true
     ports:
       - "8084:8080" # Tu puerto 8084 mapeado al 8080 de Keycloak
     volumes:
-      - keycloak_data:/opt/keycloak/data
+      - ./keycloak-config:/opt/keycloak/data/import/:ro
     networks:
       - policia-net
 
@@ -48,7 +54,7 @@ services:
       - policia-net
     environment:
       # 1. El nombre que el Gateway aceptará (lo que ve tu navegador)
-      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://keycloak:8080/realms/carinosas-realm
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=http://localhost:8084/realms/carinosas-realm
       # 2. La ruta interna donde el Gateway buscará las llaves para validar ese token
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/carinosas-realm/protocol/openid-connect/certs
     depends_on:
